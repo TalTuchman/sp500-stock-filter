@@ -43,3 +43,59 @@ with st.form("filters_form"):
 
 if submitted:
     st.success("Filters applied. Running stock scan...")
+
+import yfinance as yf
+
+def passes_filter(value, operator, threshold):
+    if value is None:
+        return False
+    return value > threshold if operator == ">" else value < threshold
+
+@st.cache_data
+def fetch_stock_data(ticker):
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        return {
+            "symbol": ticker,
+            "name": info.get("shortName", ""),
+            "trailingPE": info.get("trailingPE"),
+            "forwardPE": info.get("forwardPE"),
+            "debtToEquity": info.get("debtToEquity"),
+            "pegRatio": info.get("pegRatio"),
+            "epsGrowth": info.get("earningsQuarterlyGrowth"),
+            "marketCap": info.get("marketCap")
+        }
+    except:
+        return None
+
+results = []
+
+for ticker in tickers:
+    data = fetch_stock_data(ticker)
+    if not data:
+        continue
+
+    # Convert market cap from raw number to billions
+    mc = data["marketCap"]
+    market_cap_bil = mc / 1e9 if mc else None
+
+    if not passes_filter(data["trailingPE"] if pe_type == "Trailing" else data["forwardPE"], pe_operator, pe_value):
+        continue
+    if not passes_filter(data["debtToEquity"], debt_operator, debt_value):
+        continue
+    if not passes_filter((data["epsGrowth"] or 0) * 100, eps_operator, eps_value):  # EPS is a %
+        continue
+    if not passes_filter(data["pegRatio"], peg_operator, peg_value):
+        continue
+    if not passes_filter(market_cap_bil, marketcap_operator, marketcap_value):
+        continue
+
+    results.append(data)
+
+if results:
+    st.subheader("Matching Stocks")
+    df_results = pd.DataFrame(results)
+    st.dataframe(df_results)
+else:
+    st.warning("No stocks matched your filters.")
