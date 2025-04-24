@@ -30,3 +30,16 @@ with st.form("filters_form"):
         debt_value = st.number_input("Debt/Equity Threshold", value=1.0)
 
         eps_operator = st.selectbox("EPS Growth Filter Type", [">", "<"])
+        eps_value = st.number_input("EPS Growth Threshold (%)", value=10.0)
+
+    with col2:
+        peg_operator = st.selectbox("PEG Ratio Filter Type", [">", "<"])
+        peg_value = st.number_input("PEG Ratio Threshold", value=1.0)
+
+        marketcap_operator = st.selectbox("Market Cap Filter Type", [">", "<"])
+        marketcap_value = st.number_input("Market Cap Threshold (in billions)", value=10.0)
+
+    submitted = st.form_submit_button("Search Stocks")
+
+if submitted:
+    st.success("Filters applied. Running stock scan...")
