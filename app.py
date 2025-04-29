@@ -3,6 +3,13 @@ from controller import filter_stocks
 from presenter import show_results
 import pandas as pd
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+
 @st.cache_data
 def get_sp500_tickers():
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
